@@ -1,6 +1,6 @@
 {
   "name": "run-ios",
-  "version": "0.0.3",
+  "version": "0.2.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/a-nice-username/run-ios.git"
+    "url": "git+https://github.com/nald-dev/run-ios.git"
   },
   "author": "a-nice-username",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nald-dev/run-ios/issues"
   },
-  "homepage": "https://github.com/nald-dev/run-ios#readme",
+  "homepage": "https://github.com/nald-dev/run-ios",
   "dependencies": {
     "commander": "7.1.0",
     "inquirer": "8.0.0"
