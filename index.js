@@ -25,11 +25,11 @@ function start() {
     getIOSDeviceProcess.on('exit', () => {
       const json = JSON.parse(message)
   
-      let choices = []
+      let choices = [ 'Physical Device' ]
   
       for (const key of Object.keys(json.devices)) {
         if (key.startsWith('com.apple.CoreSimulator.SimRuntime.iOS')) {
-          choices = json.devices[key].map(({ name }) => name)
+          choices = choices.concat(json.devices[key].map(({ name }) => name))
         }
       }
 
@@ -73,7 +73,11 @@ function start() {
 
         fs.writeFileSync(userPickHistoryFilePath, JSON.stringify(userPickHistory, null, 2))
 
-        spawn('npx', [`react-native`, `run-ios`, `--simulator="${device}"`], {stdio: 'inherit', shell: true})
+        if (device == 'Physical Device') {
+          spawn('npx', [`react-native`, `run-ios`, `--device`], {stdio: 'inherit', shell: true})
+        } else {
+          spawn('npx', [`react-native`, `run-ios`, `--simulator="${device}"`], {stdio: 'inherit', shell: true})
+        }
       })
     })
   } else {
