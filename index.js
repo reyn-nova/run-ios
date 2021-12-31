@@ -2,19 +2,21 @@
 
 const commander = require('commander')
 const fs = require('fs-extra')
+const { exec, spawn } = require('child_process')
 
 commander
   .version(require('./package.json').version)
   .description('Quick React-Native Run-IOS')
-  .action(() => start())
+  .action(start)
+
+commander
+  .option('-l --latest', 'run latest used device')
 
 commander.parse(process.argv)
 
-function start() {
+function start({ latest }) {
   if (require('os').platform() == 'darwin') {
     const inquirer = require('inquirer')
-  
-    const { spawn, exec } = require('child_process')
   
     const getIOSDeviceProcess = exec('xcrun simctl list --json devices available')
   
@@ -22,7 +24,7 @@ function start() {
   
     getIOSDeviceProcess.stdout.on('data', jsonString => message += jsonString)
   
-    getIOSDeviceProcess.on('exit', () => {
+    getIOSDeviceProcess.on('exit', async() => {
       const json = JSON.parse(message)
   
       let choices = [ 'Physical Device' ]
@@ -43,8 +45,8 @@ function start() {
         userPickHistory = lastUserPickHistory
       } catch(err) { }
       
-      for (let i = userPickHistory.length - 1; i >= 0; i--) {
-        const item = userPickHistory[i]
+      for (let index = userPickHistory.length - 1; index >= 0; index--) {
+        const item = userPickHistory[index]
         
         const itemIndex = choices.indexOf(item)
 
@@ -53,35 +55,40 @@ function start() {
           choices.unshift(item)
         }
       }
+
+      if (latest) {
+        runSimulator(choices[0])
+      } else {
+        inquirer.prompt([
+          {
+            type: 'list',
+            name: 'device',
+            message: 'Quick React-Native Run-IOS',
+            choices
+          }
+        ]).then(({device}) => {
+          const deviceIndex = userPickHistory.indexOf(device)
   
-      inquirer.prompt([
-        {
-          type: 'list',
-          name: 'device',
-          message: 'Quick React-Native Run-IOS',
-          choices
-        }
-      ])
-      .then(({device}) => {
-        const deviceIndex = userPickHistory.findIndex(item => item == device)
+          if (deviceIndex != -1) {
+            userPickHistory.splice(deviceIndex, 1)
+          }
+  
+          userPickHistory.unshift(device)
+  
+          fs.writeFileSync(userPickHistoryFilePath, JSON.stringify(userPickHistory, null, 2))
 
-        if (deviceIndex != -1) {
-          userPickHistory.splice(deviceIndex, 1)
-        }
-
-        userPickHistory.unshift(device)
-
-        fs.writeFileSync(userPickHistoryFilePath, JSON.stringify(userPickHistory, null, 2))
-
-        if (device == 'Physical Device') {
-          spawn('npx', [`react-native`, `run-ios`, `--device`], {stdio: 'inherit', shell: true})
-        } else {
-          spawn('npx', [`react-native`, `run-ios`, `--simulator="${device}"`], {stdio: 'inherit', shell: true})
-        }
-      })
+          runSimulator(device)
+        })
+      }
     })
   } else {
     console.log('Sorry, run-ios is not supported with your operating system')
   }
+}
+
+function runSimulator(device) {
+  const deviceParameter = device == 'Physical Device' ? `--device` : `--simulator="${device}"`
+  
+  spawn('npx', [`react-native`, `run-ios`, deviceParameter], {stdio: 'inherit', shell: true})
 }
   
