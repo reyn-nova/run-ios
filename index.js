@@ -24,7 +24,7 @@ function start({ latest }) {
   
     getIOSDeviceProcess.stdout.on('data', jsonString => message += jsonString)
   
-    getIOSDeviceProcess.on('exit', async() => {
+    getIOSDeviceProcess.on('exit', () => {
       const json = JSON.parse(message)
   
       let choices = [ 'Physical Device' ]
@@ -57,7 +57,7 @@ function start({ latest }) {
       }
 
       if (latest) {
-        runSimulator(choices[0])
+        runDevice(choices[0])
       } else {
         inquirer.prompt([
           {
@@ -77,7 +77,7 @@ function start({ latest }) {
   
           fs.writeFileSync(userPickHistoryFilePath, JSON.stringify(userPickHistory, null, 2))
 
-          runSimulator(device)
+          runDevice(device)
         })
       }
     })
@@ -86,7 +86,7 @@ function start({ latest }) {
   }
 }
 
-function runSimulator(device) {
+function runDevice(device) {
   const deviceParameter = device == 'Physical Device' ? `--device` : `--simulator="${device}"`
   
   spawn('npx', [`react-native`, `run-ios`, deviceParameter], {stdio: 'inherit', shell: true})
